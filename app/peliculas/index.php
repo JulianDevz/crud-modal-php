@@ -1,6 +1,9 @@
-<?php require '../config/database.php'; ?>
+<?php 
 
-<?php
+    // Activamos la session para ver los mensajes
+    session_start();
+
+    require '../config/database.php'; 
 
     // Traemos el listado de las peliculas
     $sqlPeliculas = "SELECT p.id, p.nombre, p.descripcion, g.nombre AS genero FROM pelicula AS P
@@ -8,6 +11,9 @@
     ON p.id_genero = g.id";
 
     $peliculas = $conn->query($sqlPeliculas);
+
+    // Directorio de imagenes
+    $dir = "posters/";
 
 ?>
 
@@ -26,6 +32,22 @@
     
     <div class="container py-3">
         <h2 class="text-center">Peliculas</h2>
+
+        <hr>
+
+        <!-- Validamo si existe la variable de session msg es porque hay algun mensaje que esta enviando y si existe un color de mensaje, con ese color sera el que pintaremos el mensaje -->
+        <?php if(isset($_SESSION['msg']) && isset($_SESSION['color'])) { ?>
+                <div class="alert alert-<?= $_SESSION['color']; ?> alert-dismissible fade show" role="alert">
+                    <?= $_SESSION['msg']; ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+        
+        <?php
+                // Eliminamos estas variable despues de haberse usado para que no este saliendo de forma innecesaria
+                unset($_SESSION['msg']);
+                unset($_SESSION['color']);
+            } 
+        ?>
 
         <div class="row justify-content-end">
             <div class="col-auto">
@@ -47,11 +69,13 @@
             <tbody>
                 <?php while($row_pelicula = $peliculas->fetch_assoc()){ ?>
                     <tr>
-                        <td> <?= $row_pelicula["id"] ?></td>
+                        <td> <?= $row_pelicula["id"] ?></td> 
                         <td> <?= $row_pelicula["nombre"] ?></td>
                         <td> <?= $row_pelicula["descripcion"] ?></td>
                         <td> <?= $row_pelicula["genero"] ?></td>
-                        <td></td>
+
+                        <!-- El time concatenado (es un parametro en la url) nos sirve para obtener el tiempo, asi NO se quedara mostrando una imagen antigua por la cache del navegador -->
+                        <td><img src="<?=$dir.$row_pelicula["id"].'.jpeg?n='.time(); ?>" alt="" width="70"> </td>
                         <td>
                             <a href="#" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editarModal" data-bs-id="<?= $row_pelicula['id']; ?>"><i class="fa-solid fa-pen-to-square"></i> Editar</a>
                             <a href="#" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#eliminarModal" data-bs-id="<?= $row_pelicula['id']; ?>"><i class="fa-solid fa-trash"></i> Eliminar</a>
@@ -76,12 +100,32 @@
     <?php include 'eliminarModal.php'; ?>
 
     <script>
-        // Capturamos el modal de editar
+        // Capturamos los modales
         let editarModal = document.getElementById('editarModal')
-        // Capturamos el modal de eliminar
         let eliminarModal = document.getElementById('eliminarModal')
+        let nuevoModal = document.getElementById('nuevoModal')
 
-        // Escuchamos el evento del modal cuando se presione el boton y se cargue todo el modal
+        nuevoModal.addEventListener('shown.bs.modal', event => {
+            nuevoModal.querySelector('.modal-body #nombre').focus();
+        })
+
+        // Limpiamos los inputs del nuevo modal al cerrarlo
+        nuevoModal.addEventListener('hide.bs.modal', event => {
+            nuevoModal.querySelector('.modal-body #nombre').value = ""
+            nuevoModal.querySelector('.modal-body #descripcion').value = ""
+            nuevoModal.querySelector('.modal-body #genero').value = ""
+            nuevoModal.querySelector('.modal-body #poster').value = ""
+        })
+
+        // Limpiamos los inputs del modal editar al cerrarlo
+        editarModal.addEventListener('hide.bs.modal', event => {
+            editarModal.querySelector('.modal-body #nombre').value = ""
+            editarModal.querySelector('.modal-body #descripcion').value = ""
+            editarModal.querySelector('.modal-body #genero').value = ""
+            editarModal.querySelector('.modal-body #img_poster').value = ""
+        })
+
+        // Escuchamos el evento del modal cuando se presione el boton y se carguen todos los inputs del modal
         editarModal.addEventListener('shown.bs.modal', event => {
             let button = event.relatedTarget //Obtenemos el boton al que se le dio clic
             let id = button.getAttribute('data-bs-id') //Obtenemos el id del registro que quiero modificar
@@ -91,6 +135,7 @@
             let inputNombre = editarModal.querySelector('.modal-body #nombre')
             let inputDescripcion = editarModal.querySelector('.modal-body #descripcion')
             let inputGenero = editarModal.querySelector('.modal-body #genero')
+            let poster = editarModal.querySelector('.modal-body #img_poster')
 
             // Peticion con Ajax a Php para solicitar los datos de el registro a editar para mostrarlo en el formulario
             let url = "getPelicula.php"; //Ruta donde haremos la peticion
@@ -109,6 +154,8 @@
                 inputNombre.value = data.nombre
                 inputDescripcion.value = data.descripcion
                 inputGenero.value = data.id_genero
+                poster.src = '<?= $dir ?>' + data.id + '.jpeg'
+
 
             }).catch(err => console.log(err))
             
