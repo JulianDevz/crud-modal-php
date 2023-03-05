@@ -6,7 +6,7 @@
     require '../config/database.php'; 
 
     // Traemos el listado de las peliculas
-    $sqlPeliculas = "SELECT p.id, p.nombre, p.descripcion, g.nombre AS genero FROM pelicula AS P
+    $sqlPeliculas = "SELECT p.id, p.nombre, p.descripcion, g.nombre AS genero, p.imagen FROM pelicula AS P
     INNER JOIN genero AS g 
     ON p.id_genero = g.id";
 
@@ -75,7 +75,7 @@
                         <td> <?= $row_pelicula["genero"] ?></td>
 
                         <!-- El time concatenado (es un parametro en la url) nos sirve para obtener el tiempo, asi NO se quedara mostrando una imagen antigua por la cache del navegador -->
-                        <td><img src="<?=$dir.$row_pelicula["id"].'.jpeg?n='.time(); ?>" alt="" width="70"> </td>
+                        <td><img src="<?=$dir.$row_pelicula["imagen"] ?>" alt="" width="70"> </td>
                         <td>
                             <a href="#" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editarModal" data-bs-id="<?= $row_pelicula['id']; ?>"><i class="fa-solid fa-pen-to-square"></i> Editar</a>
                             <a href="#" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#eliminarModal" data-bs-id="<?= $row_pelicula['id']; ?>"><i class="fa-solid fa-trash"></i> Eliminar</a>
@@ -123,6 +123,7 @@
             editarModal.querySelector('.modal-body #descripcion').value = ""
             editarModal.querySelector('.modal-body #genero').value = ""
             editarModal.querySelector('.modal-body #img_poster').value = ""
+            editarModal.querySelector('.modal-body #poster').value = ""
         })
 
         // Escuchamos el evento del modal cuando se presione el boton y se carguen todos los inputs del modal
@@ -136,6 +137,7 @@
             let inputDescripcion = editarModal.querySelector('.modal-body #descripcion')
             let inputGenero = editarModal.querySelector('.modal-body #genero')
             let poster = editarModal.querySelector('.modal-body #img_poster')
+            let Inputposter = editarModal.querySelector('.modal-body #poster')
 
             // Peticion con Ajax a Php para solicitar los datos de el registro a editar para mostrarlo en el formulario
             let url = "getPelicula.php"; //Ruta donde haremos la peticion
@@ -154,7 +156,8 @@
                 inputNombre.value = data.nombre
                 inputDescripcion.value = data.descripcion
                 inputGenero.value = data.id_genero
-                poster.src = '<?= $dir ?>' + data.id + '.jpeg'
+                poster.src = '<?= $dir ?>' + data.imagen
+                Inputposter.value = data.imagen
 
 
             }).catch(err => console.log(err))

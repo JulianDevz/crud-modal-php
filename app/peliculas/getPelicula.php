@@ -6,7 +6,7 @@
     $id = $conn->real_escape_string($_POST['id']);
 
     // Ya que solo necesitamos traer un registro es recomendado usar limit para que apenas encuentre el primero deje de buscar, porque sql sigue buscando a ver si encuentra otro
-    $sql = "SELECT id, nombre, descripcion, id_genero FROM pelicula WHERE id=$id LIMIT 1";
+    $sql = "SELECT id, nombre, descripcion, id_genero, imagen FROM pelicula WHERE id=$id LIMIT 1";
     $resultado = $conn->query($sql);
     $rows = $resultado->num_rows; // La funcion num_rows nos dice si el resultado trae filas
 
